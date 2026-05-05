@@ -40,13 +40,13 @@ if dic_file and fato_files:
 
     col_ajuda, col_resultado = st.columns([1, 2])
 
-    # ALTERAÇÃO: placeholder substituído pela Visualização do dicionário
+    #  Visualização do dicionário
     with col_ajuda:
         st.markdown("**Visualização do Dicionário:**")
         st.dataframe(dic_df, use_container_width=True)
 
     with col_resultado:
-        st.subheader("Processando Arquivos...")
+        st.subheader("Arquivos Processados")
 
         formato_saida = st.radio("Formato de saída", ["CSV", "Excel"], horizontal=True)
 
