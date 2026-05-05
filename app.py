@@ -19,7 +19,7 @@ with st.container(border=True):
 
 # 2. Processamento
 if dic_file and fato_files:
-
+    
     if dic_file.name.endswith('.csv'):
         dic_df = pd.read_csv(dic_file, sep=None, engine='python')
     else:
@@ -64,7 +64,7 @@ if dic_file and fato_files:
             nome_base = file.name.rsplit('.', 1)[0]
 
             # ALTERAÇÃO 1: label do expander atualizado
-            with st.expander(f"👁️ Visualizar Prévia tabela upada: {file.name}"):
+            with st.expander(f"👁️ Visualizar Prévia tabela Processada: {file.name}"):
                 st.dataframe(df.head(10))
 
             if formato_saida == "CSV":
