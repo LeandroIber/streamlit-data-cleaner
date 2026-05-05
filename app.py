@@ -19,7 +19,7 @@ with st.container(border=True):
 
 # 2. Processamento
 if dic_file and fato_files:
-    
+
     if dic_file.name.endswith('.csv'):
         dic_df = pd.read_csv(dic_file, sep=None, engine='python')
     else:
@@ -40,8 +40,10 @@ if dic_file and fato_files:
 
     col_ajuda, col_resultado = st.columns([1, 2])
 
+    # ALTERAÇÃO: placeholder substituído pela prévia do dicionário
     with col_ajuda:
-        st.info("[preencher]")
+        st.markdown("**Prévia do Dicionário:**")
+        st.dataframe(dic_df, use_container_width=True)
 
     with col_resultado:
         st.subheader("Processando Arquivos...")
@@ -63,15 +65,13 @@ if dic_file and fato_files:
 
             nome_base = file.name.rsplit('.', 1)[0]
 
-            # ALTERAÇÃO 1: label do expander atualizado
-            with st.expander(f"👁️ Visualizar Prévia tabela Processada: {file.name}"):
+            with st.expander(f"👁️ Visualizar tabela upada: {file.name}"):
                 st.dataframe(df.head(10))
 
             if formato_saida == "CSV":
                 buffer = io.StringIO()
                 df.to_csv(buffer, index=False, sep=';', encoding='utf-8-sig')
                 st.download_button(
-                    # ALTERAÇÃO 2: label do botão CSV atualizado
                     label=f"Clique aqui para baixar planilha processada: {nome_base}_processada",
                     data=buffer.getvalue(),
                     file_name=f"{nome_base}_processada.csv",
@@ -82,7 +82,6 @@ if dic_file and fato_files:
                 buffer = io.BytesIO()
                 df.to_excel(buffer, index=False)
                 st.download_button(
-                    # ALTERAÇÃO 3: label do botão Excel atualizado
                     label=f"Clique aqui para baixar planilha processada: {nome_base}_processada",
                     data=buffer.getvalue(),
                     file_name=f"{nome_base}_processada.xlsx",
