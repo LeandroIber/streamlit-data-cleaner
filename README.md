@@ -1,4 +1,4 @@
-# Streamlit Data Cleaner
+# Datacleaner with Pandas Streamlit Openpyxl
 
 Aplicação Streamlit para automação de limpeza, padronização e tradução de tabelas de registro (tabelas fato) utilizando dicionários customizáveis.
 
