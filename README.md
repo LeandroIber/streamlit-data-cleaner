@@ -15,6 +15,7 @@ Na área de dados, é comum receber planilhas com nomenclaturas fora do padrão.
 - Python: Linguagem base do projeto.
 - Streamlit: Framework utilizado para a construção da interface web, upload de arquivos e botões de download.
 - Pandas: Utilizado para a leitura dos CSVs, manipulação dos DataFrames e aplicação do dicionário de dados.
+- openpyxl Utilizado para arquivos Xlsx (Excel, google sheets)
 
 Link Streamlit:
 https://app-data-cleaner-ejwhjeasdmmplvmxzcsh2t.streamlit.app/
