@@ -64,7 +64,7 @@ if dic_file and fato_files:
             nome_base = file.name.rsplit('.', 1)[0]
 
             # ALTERAÇÃO 1: label do expander atualizado
-            with st.expander(f"👁️ Visualizar tabela upada: {file.name}"):
+            with st.expander(f"👁️ Visualizar Prévia tabela upada: {file.name}"):
                 st.dataframe(df.head(10))
 
             if formato_saida == "CSV":
