@@ -40,9 +40,9 @@ if dic_file and fato_files:
 
     col_ajuda, col_resultado = st.columns([1, 2])
 
-    # ALTERAÇÃO: placeholder substituído pela prévia do dicionário
+    # ALTERAÇÃO: placeholder substituído pela Visualização do dicionário
     with col_ajuda:
-        st.markdown("**Prévia do Dicionário:**")
+        st.markdown("**Visualização do Dicionário:**")
         st.dataframe(dic_df, use_container_width=True)
 
     with col_resultado:
