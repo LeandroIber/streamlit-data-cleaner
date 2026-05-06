@@ -3,22 +3,19 @@ import pandas as pd
 import io
 
 
-# Função auxiliar para leitura de CSV ou XLSX
+# --- Função auxiliar para leitura de CSV ou XLSX ---
 def ler_arquivo(file, **kwargs):
     """Lê CSV ou XLSX a partir do nome do arquivo."""
     nome = file.name.lower()
     if nome.endswith(('.xlsx', '.xls')):
-        # read_excel não aceita sep nem engine='python'
-        kwargs.pop('sep', None)
-        kwargs.pop('engine', None)
         return pd.read_excel(file, **kwargs)
     return pd.read_csv(file, sep=None, engine='python', **kwargs)
 
 
 # Configuração da página
 st.set_page_config(page_title="Tradutor de Tabelas Registro", layout="wide")
-st.title("Limpeza e Substituição")
-st.markdown("Suba seus arquivos CSV ou XLSX para Alterar")
+st.title("Automação de Limpeza e Tradução")
+st.markdown("Suba seus arquivos CSV ou XLSX para aplicar a substituição.")
 
 # Passo 1: Inicializar a "memória" da etapa
 if 'etapa' not in st.session_state:
@@ -26,27 +23,27 @@ if 'etapa' not in st.session_state:
 
 # --- TOPO SEMPRE VISÍVEL ---
 fato_files = st.file_uploader(
-    "Suba as tabelas Registro (fato) (Pode selecionar várias)",
+    "Upload das tabelas (Pode selecionar várias)",
     type=['csv', 'xlsx'],
     accept_multiple_files=True
 )
 
 # Indicador visual de progresso
 if fato_files:
-    etapa_labels = {1: "① Escolher Colunas", 2: "② Criar Regras", 3: "③ Processar e Baixar"}
+    etapa_labels = {1: "① Escolher Colunas", 2: "② Criar Dicionário", 3: "③ Processar e Baixar"}
     st.info(f"**Etapa atual:** {etapa_labels.get(st.session_state.etapa, '')}")
     st.divider()
 
 # --- BLOCOS DE ETAPAS ---
 if fato_files:
 
-    # =========================================================
-    # ETAPA 1 — Escolher Colunas
-    # =========================================================
+    
+    # ETAPA 1 —> Escolher Colunas
+    
     if st.session_state.etapa == 1:
         st.subheader("Etapa 1: Escolha as Colunas para Tradução")
 
-        # 10 primeiras linhas do primeiro arquivo
+        # "Espiadinha": lê as 10 primeiras linhas do primeiro arquivo
         primeiro_arquivo = fato_files[0]
         df_temp = ler_arquivo(primeiro_arquivo, nrows=10)
         primeiro_arquivo.seek(0)  # Reseta o cursor para leituras futuras
@@ -54,7 +51,7 @@ if fato_files:
         todas_colunas = df_temp.columns.tolist()
 
         # Prévia dos dados originais
-        with st.expander("👁️ Visualizar dados originais (10 primeiras linhas)"):
+        with st.expander("Visualizar dados originais (10 primeiras linhas)"):
             st.dataframe(df_temp, width='stretch')
 
         # Pré-seleciona colunas padrão se existirem no arquivo
@@ -62,7 +59,7 @@ if fato_files:
         selecao_default = [c for c in colunas_padrao if c in todas_colunas]
 
         colunas_selecionadas = st.multiselect(
-            "Selecione as colunas que devem receber a tradução do dicionário:",
+            "Selecione as colunas que devem receber a Substituição:",
             options=todas_colunas,
             default=selecao_default
         )
@@ -75,9 +72,7 @@ if fato_files:
         if not colunas_selecionadas:
             st.warning("Selecione ao menos uma coluna para continuar.")
 
-    # =========================================================
-    # ETAPA 2 — Mapeamento Dinâmico
-    # =========================================================
+    # ETAPA 2 —> Criar o Dicionário Dinâmico
     elif st.session_state.etapa == 2:
         st.subheader("Etapa 2: Monte o Dicionário de Tradução")
         st.markdown(
@@ -88,7 +83,7 @@ if fato_files:
 
         # Prévia dos dados originais para consulta
         try:
-            with st.expander("👁️ Visualizar dados originais (10 primeiras linhas)"):
+            with st.expander("Visualizar dados originais (10 primeiras linhas)"):
                 arquivo_consulta = fato_files[0]
                 arquivo_consulta.seek(0)  # Garante cursor no início
                 df_consulta = ler_arquivo(arquivo_consulta, nrows=10)
@@ -140,9 +135,8 @@ if fato_files:
         else:
             st.success(f"{len(linhas_validas)} regra(s) definida(s).")
 
-    # =========================================================
-    # ETAPA 3 — Processar e Baixar
-    # =========================================================
+    # ETAPA 3 > Processar e Download
+
     elif st.session_state.etapa == 3:
         st.subheader("Etapa 3: Arquivos Processados")
 
@@ -151,7 +145,7 @@ if fato_files:
         colunas_alvo  = st.session_state.colunas_selecionadas
 
         mapa_global = {}
-        ignorar = ['antigo', 'novo', 'nan']
+        ignorar = ['antigo', 'novo']
 
         for _, row in dicionario_df.iterrows():
             a = row.get("Antigo", None)
@@ -163,11 +157,8 @@ if fato_files:
 
         st.success(f"Dicionário com **{len(mapa_global)}** termo(s) mapeado(s) | Colunas alvo: `{', '.join(colunas_alvo)}`")
 
-        # Resetar cursores antes de processar
-        for f in fato_files:
-            f.seek(0)
-
         for file in fato_files:
+            file.seek(0)
             df = ler_arquivo(file)
 
             for col in colunas_alvo:
@@ -193,7 +184,7 @@ if fato_files:
             col_csv, col_xlsx = st.columns(2)
             with col_csv:
                 st.download_button(
-                    label=f"📥 Baixar {file.name} como CSV",
+                    label=f"Download {file.name} como CSV",
                     data=csv_buffer.getvalue(),
                     file_name=f"{nome_base}_processada.csv",
                     mime="text/csv",
@@ -201,7 +192,7 @@ if fato_files:
                 )
             with col_xlsx:
                 st.download_button(
-                    label=f"📥 Baixar {file.name} como XLSX",
+                    label=f"Download {file.name} como XLSX",
                     data=xlsx_buffer.getvalue(),
                     file_name=f"{nome_base}_processada.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -209,7 +200,7 @@ if fato_files:
                 )
 
         st.divider()
-        if st.button("Limpar e processar novos arquivos"):
+        if st.button("Voltar"):
             st.session_state.etapa = 1
             if 'colunas_selecionadas' in st.session_state:
                 del st.session_state.colunas_selecionadas
