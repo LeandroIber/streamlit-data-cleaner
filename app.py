@@ -43,7 +43,7 @@ if fato_files:
     if st.session_state.etapa == 1:
         st.subheader("Etapa 1: Escolha as Colunas para Tradução")
 
-        # "Espiadinha": lê as 10 primeiras linhas do primeiro arquivo
+        # lê as 10 primeiras linhas do primeiro arquivo
         primeiro_arquivo = fato_files[0]
         df_temp = ler_arquivo(primeiro_arquivo, nrows=10)
         primeiro_arquivo.seek(0)  # Reseta o cursor para leituras futuras
