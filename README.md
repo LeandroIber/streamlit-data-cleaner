@@ -1,21 +1,29 @@
-# Datacleaner with Pandas Streamlit Openpyxl
+# Datacleaner with Pandas, Streamlit & Openpyxl
 
-Aplicação Streamlit para automação de limpeza, padronização e tradução de tabelas de registro (tabelas fato) utilizando dicionários customizáveis.
+Aplicação web interativa construída com Streamlit para automação de limpeza, padronização e tradução de tabelas de registro. A ferramenta permite a aplicação de regras customizáveis de substituição de dados ("De/Para") de forma visual e intuitiva.
+
+Acesse a aplicação: [Datacleaner App](https://app-data-cleaner-ejwhjeasdmmplvmxzcsh2t.streamlit.app/)
 
 ## O Problema que este projeto resolve
-Na área de dados, é comum receber planilhas com nomenclaturas fora do padrão. Este aplicativo elimina a necessidade de fazer substituições manuais ou usar scripts complexos repetitivos. Ele recebe um arquivo de dicionário com regras "De/Para" e aplica essa padronização em múltiplos arquivos CSV de forma automatizada e visual.
+
+Na área de dados, é comum receber planilhas com nomenclaturas fora do padrão, erros de digitação ou termos legados. Este aplicativo elimina a necessidade de fazer substituições manuais demoradas no Excel ou de escrever scripts complexos e repetitivos para cada nova demanda. Ele permite que o usuário selecione colunas específicas, crie regras de padronização diretamente na interface e aplique essas correções em múltiplos arquivos de forma automatizada.
 
 ## Funcionalidades
-- **Upload de Dicionário:** Carregue um arquivo CSV contendo as colunas com os termos antigos e novos.
-- **Processamento em Lote (Batch):** Suba várias tabelas de registro (fato) ao mesmo tempo para processamento simultâneo.
-- **Limpeza Inteligente:** O mecanismo de mapeamento global ignora metadados e valores nulos automaticamente para evitar distorções nos dados.
-- **Download Simplificado:** Gere e baixe os novos arquivos CSV limpos e prontos para bancos de dados ou dashboards com um clique.
+
+O aplicativo funciona como um assistente em 3 etapas simples:
+
+- **1. Seleção Direcionada:** Upload de arquivos e escolha exata de quais colunas devem receber o tratamento, com pré-visualização instantânea dos dados originais.
+- **2. Criação Dinâmica de Dicionário:** Interface de grade editável para inserir, na hora, as regras com os termos "Antigos" e "Novos", sem a necessidade de fazer upload de um dicionário separado.
+- **3. Processamento em Lote (Batch):** Suba e processe múltiplas tabelas (CSV ou XLSX) simultaneamente. O mecanismo atualiza os dados em memória, otimizando a performance da aplicação.
+- **Exportação Flexível:** Download imediato dos arquivos processados disponíveis em formatos .csv e .xlsx com um único clique.
 
 ## Tecnologias Utilizadas
-- Python: Linguagem base do projeto.
-- Streamlit: Framework utilizado para a construção da interface web, upload de arquivos e botões de download.
-- Pandas: Utilizado para a leitura dos CSVs, manipulação dos DataFrames e aplicação do dicionário de dados.
-- openpyxl Utilizado para arquivos Xlsx (Excel, google sheets)
 
-Link Streamlit:
-https://app-data-cleaner-ejwhjeasdmmplvmxzcsh2t.streamlit.app/
+- **Python:** Linguagem base do projeto.
+- **Streamlit:** Framework utilizado para a construção de toda a interface web, navegação entre as etapas e gestão do estado da aplicação (session_state).
+- **Pandas:** Motor principal para leitura estruturada, manipulação dos DataFrames em memória e aplicação das regras de substituição de texto.
+- **Openpyxl:** Biblioteca integrada para suporte nativo a leitura e escrita de arquivos Excel (.xlsx), garantindo compatibilidade com planilhas de negócios.
+- 
+## Autor
+
+Desenvolvido por Leandro Iber.
