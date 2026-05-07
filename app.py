@@ -173,8 +173,14 @@ if fato_files and st.session_state.dataframes:
         todas_colunas = df_temp.columns.tolist()
 
         # Prévia dos dados originais
-        with st.expander(f"Visualizar dados originais — {primeiro_nome} (10 primeiras linhas)"):
-            st.dataframe(df_temp.head(10), width='stretch')
+        with st.expander(f"Visualizar dados originais — {primeiro_nome}"):
+            mostrar_mais = st.checkbox(
+                "Expandir amostra para 150 linhas",
+                value=False,
+                key="expandir_etapa1"
+            )
+            linhas = 150 if mostrar_mais else 10
+            st.dataframe(df_temp.head(linhas), width='stretch')
 
         # Pré-seleciona colunas configuradas no topo, se existirem no arquivo
         selecao_default = [c for c in COLUNAS_PRE_SELECIONADAS if c in todas_colunas]
@@ -204,14 +210,20 @@ if fato_files and st.session_state.dataframes:
         )
 
         # Prévia das colunas selecionadas (lê do cache)
-        with st.expander("Visualizar dados originais (10 primeiras linhas)"):
+        with st.expander("Visualizar dados originais"):
             primeiro_nome = next(iter(st.session_state.dataframes))
             df_consulta = st.session_state.dataframes[primeiro_nome]
 
             colunas_escolhidas = st.session_state.colunas_selecionadas
             colunas_validas = [c for c in colunas_escolhidas if c in df_consulta.columns]
             if colunas_validas:
-                st.dataframe(df_consulta[colunas_validas].head(10), width='stretch')
+                mostrar_mais = st.checkbox(
+                    "Expandir amostra para 150 linhas",
+                    value=False,
+                    key="expandir_etapa2"
+                )
+                linhas = 150 if mostrar_mais else 10
+                st.dataframe(df_consulta[colunas_validas].head(linhas), width='stretch')
             else:
                 st.warning("Nenhuma das colunas selecionadas foi encontrada na prévia.")
 
@@ -312,7 +324,13 @@ if fato_files and st.session_state.dataframes:
                 )
 
             with st.expander(f"Visualizar: {nome_arquivo}"):
-                st.dataframe(df.head(10))
+                mostrar_mais = st.checkbox(
+                    "Expandir amostra para 150 linhas",
+                    value=False,
+                    key=f"expandir_etapa3_{nome_arquivo}"
+                )
+                linhas = 150 if mostrar_mais else 10
+                st.dataframe(df.head(linhas), width='stretch')
 
             # Nome base sem extensão
             nome_base = nome_arquivo.rsplit('.', 1)[0]
