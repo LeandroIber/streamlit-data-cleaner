@@ -190,7 +190,6 @@ if fato_files and st.session_state.dataframes:
             options=todas_colunas,
             default=selecao_default,
             help="Apenas colunas de texto serão processadas. Numéricas/data são ignoradas automaticamente."
-            placeholder="Selecione as colunas..."
         )
 
         # --- NOVO BLOCO DE AUTO-LIMPEZA ---
