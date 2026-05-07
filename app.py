@@ -13,7 +13,7 @@ def ler_arquivo(file, **kwargs):
 
 
 # Configuração da página
-st.set_page_config(page_title="Tradutor de Tabelas Registro", layout="wide")
+st.set_page_config(page_title="Datacleaner Automático", layout="wide")
 st.title("Automação de Limpeza e Tradução")
 st.markdown("Suba seus arquivos CSV ou XLSX para aplicar a substituição.")
 
