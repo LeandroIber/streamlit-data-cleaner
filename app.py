@@ -9,7 +9,7 @@ import streamlit as st
 # CONFIGURAÇÃO
 # ============================================================
 # Colunas que aparecem pré-selecionadas na Etapa 1 se existirem no arquivo.
-# Apenas conveniência - adapte para o seu domínio (ex.: ['utm_source', 'campaign'])
+# Apenas conveniência — adapte para o seu domínio (ex.: ['utm_source', 'campaign'])
 # ou deixe a lista vazia ([]) para desativar a pré-seleção.
 COLUNAS_PRE_SELECIONADAS: list[str] = [
     'dim_analista',
@@ -31,7 +31,7 @@ def _detectar_separador(amostra: str) -> str | None:
     Tenta identificar o delimitador do CSV via csv.Sniffer.
 
     Retorna o caractere separador (',', ';', '\\t' ou '|') ou None se o
-    sniffer não conseguir decidir - nesse caso o caller pode cair para
+    sniffer não conseguir decidir — nesse caso o caller pode cair para
     o engine Python como rede de segurança.
     """
     try:
@@ -182,7 +182,8 @@ if fato_files and st.session_state.dataframes:
         colunas_selecionadas = st.multiselect(
             "Selecione as colunas que devem receber a Substituição:",
             options=todas_colunas,
-            default=selecao_default
+            default=selecao_default,
+            help="Apenas colunas de texto serão processadas. Numéricas/data são ignoradas automaticamente."
         )
 
         if st.button("Ir para criação de regras →", type="primary", disabled=not colunas_selecionadas):
@@ -272,21 +273,43 @@ if fato_files and st.session_state.dataframes:
         st.success(f"Dicionário com **{len(mapa_global)}** termo(s) mapeado(s) | Colunas alvo: `{', '.join(colunas_alvo)}`")
 
         for nome_arquivo, df_original in st.session_state.dataframes.items():
-            # IMPORTANTE: copia antes de modificar - o original fica intocado no
+            # IMPORTANTE: copia antes de modificar — o original fica intocado no
             # cache, permitindo que o usuário volte e refaça com outro dicionário.
             df = df_original.copy()
+            colunas_ignoradas: list[tuple[str, str]] = []  # (nome, dtype)
 
-            # Aplica a substituição apenas nas linhas com valor, valor nulo continua nulo, nada de string's.
-            # Sem essa máscara, o astype(str) converteria NaN em string "nan".
             for col in colunas_alvo:
-                if col in df.columns:
-                    mask_nao_nulo = df[col].notna()
-                    df.loc[mask_nao_nulo, col] = (
-                        df.loc[mask_nao_nulo, col]
-                          .astype(str)
-                          .str.strip()
-                          .replace(mapa_global)
-                    )
+                if col not in df.columns:
+                    continue
+
+                # Substituição de dicionário só se aplica a colunas de texto.
+                # No pandas 3.0+ atribuir string em coluna numérica via .loc
+                # levanta TypeError, então pulamos explicitamente.
+                eh_texto = (
+                    pd.api.types.is_object_dtype(df[col])
+                    or pd.api.types.is_string_dtype(df[col])
+                )
+                if not eh_texto:
+                    colunas_ignoradas.append((col, str(df[col].dtype)))
+                    continue
+
+                # Aplica a substituição apenas nas linhas com valor (preserva NaN reais).
+                # Sem essa máscara, o astype(str) converteria NaN em string "nan".
+                mask_nao_nulo = df[col].notna()
+                df.loc[mask_nao_nulo, col] = (
+                    df.loc[mask_nao_nulo, col]
+                      .astype(str)
+                      .str.strip()
+                      .replace(mapa_global)
+                )
+
+            # Avisa, uma vez por arquivo, as colunas que foram puladas
+            if colunas_ignoradas:
+                detalhes = ', '.join(f"`{c}` ({t})" for c, t in colunas_ignoradas)
+                st.warning(
+                    f"⚠️ Em `{nome_arquivo}`, as colunas {detalhes} foram ignoradas "
+                    "porque não são de texto (substituição via dicionário só se aplica a strings)."
+                )
 
             with st.expander(f"Visualizar: {nome_arquivo}"):
                 st.dataframe(df.head(10))
@@ -336,4 +359,4 @@ elif fato_files and not st.session_state.dataframes:
     st.warning("Nenhum dos arquivos enviados pôde ser lido. Verifique os erros acima e tente novamente.")
 
 else:
-    st.info("Aguardando o upload das tabelas para começar.")
+    st.info("Aguardando o upload das tabelas fato para começar.")
