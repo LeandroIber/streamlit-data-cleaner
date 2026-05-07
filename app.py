@@ -1,25 +1,117 @@
-import streamlit as st
-import pandas as pd
+import csv
 import io
 
+import pandas as pd
+import streamlit as st
 
-# --- Função auxiliar para leitura de CSV ou XLSX ---
-def ler_arquivo(file, **kwargs):
-    """Lê CSV ou XLSX a partir do nome do arquivo."""
+
+# ============================================================
+# CONFIGURAÇÃO
+# ============================================================
+# Colunas que aparecem pré-selecionadas na Etapa 1 se existirem no arquivo.
+# Apenas conveniência - adapte para o seu domínio (ex.: ['utm_source', 'campaign'])
+# ou deixe a lista vazia ([]) para desativar a pré-seleção.
+COLUNAS_PRE_SELECIONADAS: list[str] = [
+    'dim_analista',
+    'dim_orgao',
+    'dim_identificacaoprojeto',
+    'dim_cliente',
+]
+
+# Tamanho da amostra usada para detectar o separador (8KB cobre dezenas de linhas)
+_AMOSTRA_BYTES = 8192
+
+
+# ============================================================
+# LEITURA DE ARQUIVOS
+# ============================================================
+
+def _detectar_separador(amostra: str) -> str | None:
+    """
+    Tenta identificar o delimitador do CSV via csv.Sniffer.
+
+    Retorna o caractere separador (',', ';', '\\t' ou '|') ou None se o
+    sniffer não conseguir decidir - nesse caso o caller pode cair para
+    o engine Python como rede de segurança.
+    """
+    try:
+        dialect = csv.Sniffer().sniff(amostra, delimiters=',;\t|')
+        return dialect.delimiter
+    except csv.Error:
+        return None
+
+
+def ler_arquivo(file, **kwargs) -> pd.DataFrame:
+    """
+    Lê CSV ou XLSX a partir do nome do arquivo.
+
+    Para CSVs:
+      - Tenta UTF-8 primeiro (incluindo BOM via utf-8-sig) e cai para latin-1.
+      - "Espia" os primeiros KB do arquivo para descobrir o separador, e usa
+        o engine C (rápido) quando bem-sucedido. Se o sniffer falhar, cai
+        para o engine Python que detecta o separador automaticamente.
+
+    Raises:
+        ValueError: se o arquivo não puder ser lido com nenhuma das estratégias.
+    """
     nome = file.name.lower()
+
+    # Excel: openpyxl cuida do encoding internamente
     if nome.endswith(('.xlsx', '.xls')):
-        return pd.read_excel(file, **kwargs)
-    return pd.read_csv(file, sep=None, engine='python', **kwargs)
+        try:
+            return pd.read_excel(file, **kwargs)
+        except Exception as e:
+            raise ValueError(f"Não foi possível ler o Excel: {e}") from e
+
+    # CSV: tenta encodings em cascata
+    for encoding in ('utf-8-sig', 'latin-1'):
+        try:
+            # 1. Espia uma amostra para descobrir o separador
+            file.seek(0)
+            amostra_bytes = file.read(_AMOSTRA_BYTES)
+            amostra = (
+                amostra_bytes.decode(encoding)
+                if isinstance(amostra_bytes, bytes)
+                else amostra_bytes
+            )
+            sep = _detectar_separador(amostra)
+
+            # 2. Lê o arquivo todo: engine C se sabemos o sep, Python como fallback
+            file.seek(0)
+            if sep is not None:
+                return pd.read_csv(
+                    file, sep=sep, engine='c',
+                    encoding=encoding, **kwargs
+                )
+            return pd.read_csv(
+                file, sep=None, engine='python',
+                encoding=encoding, **kwargs
+            )
+
+        except UnicodeDecodeError:
+            # Encoding errado (pode falhar tanto no decode da amostra quanto no read_csv)
+            continue
+        except Exception as e:
+            raise ValueError(f"Erro ao processar o CSV: {e}") from e
+
+    raise ValueError(
+        "Não foi possível decodificar o arquivo. "
+        "Tente salvá-lo como UTF-8 ou converter para XLSX."
+    )
 
 
-# Configuração da página
+# ============================================================
+# CONFIGURAÇÃO DA PÁGINA
+# ============================================================
+
 st.set_page_config(page_title="Datacleaner Automático", layout="wide")
 st.title("Automação de Limpeza e Tradução")
 st.markdown("Suba seus arquivos CSV ou XLSX para aplicar a substituição.")
 
-# Passo 1: Inicializar a "memória" da etapa
+# Inicializa a "memória" da etapa
 if 'etapa' not in st.session_state:
     st.session_state.etapa = 1
+
 
 # --- TOPO SEMPRE VISÍVEL ---
 fato_files = st.file_uploader(
@@ -28,35 +120,64 @@ fato_files = st.file_uploader(
     accept_multiple_files=True
 )
 
-# Indicador visual de progresso
+
+# ============================================================
+# CACHE DE DATAFRAMES
+# ============================================================
+# Streamlit re-executa o script inteiro a cada interação. Para não reler
+# os arquivos do disco em toda etapa, carregamos uma vez só e guardamos
+# os DataFrames no session_state. A chave (nome, tamanho) detecta se o
+# usuário trocou os arquivos.
+
 if fato_files:
+    cache_key = tuple((f.name, f.size) for f in fato_files)
+    if st.session_state.get('cache_key') != cache_key:
+        with st.spinner("Carregando arquivos..."):
+            dataframes: dict[str, pd.DataFrame] = {}
+            erros: list[tuple[str, str]] = []
+            for file in fato_files:
+                file.seek(0)
+                try:
+                    dataframes[file.name] = ler_arquivo(file)
+                except ValueError as e:
+                    erros.append((file.name, str(e)))
+            st.session_state.dataframes = dataframes
+            st.session_state.erros_carregamento = erros
+            st.session_state.cache_key = cache_key
+            st.session_state.etapa = 1  # novos arquivos = volta para o início
+
+    # Mostra erros de leitura uma vez, visível em qualquer etapa
+    for nome, erro in st.session_state.get('erros_carregamento', []):
+        st.error(f"❌ Não conseguimos ler `{nome}`. Esse arquivo será ignorado.")
+        st.caption(f"Detalhe técnico: {erro}")
+
+    # Indicador visual de progresso
     etapa_labels = {1: "① Escolher Colunas", 2: "② Criar Dicionário", 3: "③ Processar e Baixar"}
     st.info(f"**Etapa atual:** {etapa_labels.get(st.session_state.etapa, '')}")
     st.divider()
 
-# --- BLOCOS DE ETAPAS ---
-if fato_files:
 
-    
+# ============================================================
+# BLOCOS DE ETAPAS
+# ============================================================
+
+if fato_files and st.session_state.dataframes:
+
     # ETAPA 1 —> Escolher Colunas
-    
     if st.session_state.etapa == 1:
         st.subheader("Etapa 1: Escolha as Colunas para Tradução")
 
-        # lê as 10 primeiras linhas do primeiro arquivo
-        primeiro_arquivo = fato_files[0]
-        df_temp = ler_arquivo(primeiro_arquivo, nrows=10)
-        primeiro_arquivo.seek(0)  # Reseta o cursor para leituras futuras
-
+        # Pega o primeiro DataFrame válido (em cache)
+        primeiro_nome = next(iter(st.session_state.dataframes))
+        df_temp = st.session_state.dataframes[primeiro_nome]
         todas_colunas = df_temp.columns.tolist()
 
         # Prévia dos dados originais
-        with st.expander("Visualizar dados originais (10 primeiras linhas)"):
-            st.dataframe(df_temp, width='stretch')
+        with st.expander(f"Visualizar dados originais — {primeiro_nome} (10 primeiras linhas)"):
+            st.dataframe(df_temp.head(10), width='stretch')
 
-        # Pré-seleciona colunas padrão se existirem no arquivo
-        colunas_padrao = ['dim_analista', 'dim_orgao', 'dim_identificacaoprojeto', 'dim_cliente']
-        selecao_default = [c for c in colunas_padrao if c in todas_colunas]
+        # Pré-seleciona colunas configuradas no topo, se existirem no arquivo
+        selecao_default = [c for c in COLUNAS_PRE_SELECIONADAS if c in todas_colunas]
 
         colunas_selecionadas = st.multiselect(
             "Selecione as colunas que devem receber a Substituição:",
@@ -81,23 +202,17 @@ if fato_files:
             "Use o botão **＋** para adicionar mais linhas."
         )
 
-        # Prévia dos dados originais para consulta
-        try:
-            with st.expander("Visualizar dados originais (10 primeiras linhas)"):
-                arquivo_consulta = fato_files[0]
-                arquivo_consulta.seek(0)  # Garante cursor no início
-                df_consulta = ler_arquivo(arquivo_consulta, nrows=10)
-                arquivo_consulta.seek(0)  # Rebobina após a leitura
+        # Prévia das colunas selecionadas (lê do cache)
+        with st.expander("Visualizar dados originais (10 primeiras linhas)"):
+            primeiro_nome = next(iter(st.session_state.dataframes))
+            df_consulta = st.session_state.dataframes[primeiro_nome]
 
-                # Filtra apenas colunas que realmente existem no arquivo
-                colunas_escolhidas = st.session_state.colunas_selecionadas
-                colunas_validas = [c for c in colunas_escolhidas if c in df_consulta.columns]
-                if colunas_validas:
-                    st.dataframe(df_consulta[colunas_validas], width='stretch')
-                else:
-                    st.warning("Nenhuma das colunas selecionadas foi encontrada na prévia.")
-        except Exception as e:
-            st.warning(f"Não foi possível carregar a prévia: {e}")
+            colunas_escolhidas = st.session_state.colunas_selecionadas
+            colunas_validas = [c for c in colunas_escolhidas if c in df_consulta.columns]
+            if colunas_validas:
+                st.dataframe(df_consulta[colunas_validas].head(10), width='stretch')
+            else:
+                st.warning("Nenhuma das colunas selecionadas foi encontrada na prévia.")
 
         df_vazio = pd.DataFrame({"Antigo": [""], "Novo": [""]})
 
@@ -136,7 +251,6 @@ if fato_files:
             st.success(f"{len(linhas_validas)} regra(s) definida(s).")
 
     # ETAPA 3 > Processar e Download
-
     elif st.session_state.etapa == 3:
         st.subheader("Etapa 3: Arquivos Processados")
 
@@ -157,19 +271,28 @@ if fato_files:
 
         st.success(f"Dicionário com **{len(mapa_global)}** termo(s) mapeado(s) | Colunas alvo: `{', '.join(colunas_alvo)}`")
 
-        for file in fato_files:
-            file.seek(0)
-            df = ler_arquivo(file)
+        for nome_arquivo, df_original in st.session_state.dataframes.items():
+            # IMPORTANTE: copia antes de modificar - o original fica intocado no
+            # cache, permitindo que o usuário volte e refaça com outro dicionário.
+            df = df_original.copy()
 
+            # Aplica a substituição apenas nas linhas com valor, valor nulo continua nulo, nada de string's.
+            # Sem essa máscara, o astype(str) converteria NaN em string "nan".
             for col in colunas_alvo:
                 if col in df.columns:
-                    df[col] = df[col].astype(str).str.strip().replace(mapa_global)
+                    mask_nao_nulo = df[col].notna()
+                    df.loc[mask_nao_nulo, col] = (
+                        df.loc[mask_nao_nulo, col]
+                          .astype(str)
+                          .str.strip()
+                          .replace(mapa_global)
+                    )
 
-            with st.expander(f"Visualizar: {file.name}"):
+            with st.expander(f"Visualizar: {nome_arquivo}"):
                 st.dataframe(df.head(10))
 
             # Nome base sem extensão
-            nome_base = file.name.rsplit('.', 1)[0]
+            nome_base = nome_arquivo.rsplit('.', 1)[0]
 
             # Buffer CSV
             csv_buffer = io.StringIO()
@@ -184,19 +307,19 @@ if fato_files:
             col_csv, col_xlsx = st.columns(2)
             with col_csv:
                 st.download_button(
-                    label=f"Download {file.name} como CSV",
+                    label=f"Download {nome_arquivo} como CSV",
                     data=csv_buffer.getvalue(),
                     file_name=f"{nome_base}_processada.csv",
                     mime="text/csv",
-                    key=f"csv_{file.name}"
+                    key=f"csv_{nome_arquivo}"
                 )
             with col_xlsx:
                 st.download_button(
-                    label=f"Download {file.name} como XLSX",
+                    label=f"Download {nome_arquivo} como XLSX",
                     data=xlsx_buffer.getvalue(),
                     file_name=f"{nome_base}_processada.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    key=f"xlsx_{file.name}"
+                    key=f"xlsx_{nome_arquivo}"
                 )
 
         st.divider()
@@ -208,5 +331,9 @@ if fato_files:
                 del st.session_state.dicionario_editado
             st.rerun()
 
+elif fato_files and not st.session_state.dataframes:
+    # Caso extremo: todos os arquivos enviados falharam na leitura
+    st.warning("Nenhum dos arquivos enviados pôde ser lido. Verifique os erros acima e tente novamente.")
+
 else:
-    st.info("Aguardando o upload das tabelas fato para começar.")
+    st.info("Aguardando o upload das tabelas para começar.")
