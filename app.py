@@ -175,7 +175,7 @@ if fato_files and st.session_state.dataframes:
         # Prévia dos dados originais
         with st.expander(f"Visualizar dados originais — {primeiro_nome}"):
             mostrar_mais = st.checkbox(
-                "Expandir amostra para 150 linhas",
+                "Habilitar mais linhas (150)",
                 value=False,
                 key="expandir_etapa1"
             )
