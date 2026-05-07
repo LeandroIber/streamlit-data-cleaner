@@ -231,21 +231,46 @@ if fato_files and st.session_state.dataframes:
             "Use o botão **＋** para adicionar mais linhas."
         )
 
-        # Prévia das colunas selecionadas (lê do cache)
-        with st.expander("Visualizar dados originais"):
+        # --- CORREÇÃO: Aplicar auto-limpeza na visualização da prévia ---
+        with st.expander("Visualizar dados pré-processados (com auto-limpeza)"):
             primeiro_nome = next(iter(st.session_state.dataframes))
-            df_consulta = st.session_state.dataframes[primeiro_nome]
+            
+            # Criamos uma cópia temporária para não alterar o cache original
+            df_preview = st.session_state.dataframes[primeiro_nome].copy()
 
             colunas_escolhidas = st.session_state.colunas_selecionadas
-            colunas_validas = [c for c in colunas_escolhidas if c in df_consulta.columns]
+            colunas_validas = [c for c in colunas_escolhidas if c in df_preview.columns]
+            
             if colunas_validas:
+                # Aplicamos as mesmas regras de limpeza da Etapa 3 na nossa prévia
+                for col in colunas_validas:
+                    eh_texto = (
+                        pd.api.types.is_object_dtype(df_preview[col])
+                        or pd.api.types.is_string_dtype(df_preview[col])
+                    )
+                    
+                    if eh_texto:
+                        mask = df_preview[col].notna()
+                        # Padronização básica (strip)
+                        serie = df_preview.loc[mask, col].astype(str).str.strip()
+                        
+                        # Espaços extras
+                        if st.session_state.get('auto_spaces', False):
+                            serie = serie.replace(r'\s+', ' ', regex=True)
+                            
+                        # Capitalização
+                        if st.session_state.get('auto_title', False):
+                            serie = serie.str.title()
+                            
+                        df_preview.loc[mask, col] = serie
+
                 mostrar_mais = st.checkbox(
                     "Expandir amostra para 150 linhas",
                     value=False,
                     key="expandir_etapa2"
                 )
                 linhas = 150 if mostrar_mais else 10
-                st.dataframe(df_consulta[colunas_validas].head(linhas), width='stretch')
+                st.dataframe(df_preview[colunas_validas].head(linhas), width='stretch')
             else:
                 st.warning("Nenhuma das colunas selecionadas foi encontrada na prévia.")
 
@@ -256,34 +281,47 @@ if fato_files and st.session_state.dataframes:
             num_rows="dynamic",
             width='stretch',
             column_config={
-                "Antigo": st.column_config.TextColumn("Termo Antigo (original)"),
+                "Antigo": st.column_config.TextColumn("Termo Antigo (como aparece acima)"),
                 "Novo":   st.column_config.TextColumn("Termo Novo (traduzido)"),
             }
         )
+        # --- FIM DA CORREÇÃO ---
 
+        # --- NOVO BLOCO DE LÓGICA DE ATIVAÇÃO ---
         col_voltar, col_avancar = st.columns([1, 3])
+
         with col_voltar:
             if st.button("← Voltar"):
                 st.session_state.etapa = 1
                 st.rerun()
+
         with col_avancar:
-            # Conta linhas válidas (ambas as colunas preenchidas)
+            # 1. Identifica se há regras válidas no dicionário
             linhas_validas = dicionario_editado.dropna(subset=["Antigo", "Novo"])
             linhas_validas = linhas_validas[
-                (linhas_validas["Antigo"].str.strip() != "") &
-                (linhas_validas["Novo"].str.strip() != "")
+                (linhas_validas["Antigo"].astype(str).str.strip() != "") &
+                (linhas_validas["Novo"].astype(str).str.strip() != "")
             ]
-            btn_disabled = len(linhas_validas) == 0
+
+            # 2. Verifica as condições (Regras OU Filtros de Auto-Limpeza)
+            tem_regras = len(linhas_validas) > 0
+            tem_autolimpeza = st.session_state.get('auto_title', False) or st.session_state.get('auto_spaces', False)
+
+            # O botão fica desabilitado apenas se AMBOS forem falsos
+            btn_disabled = not (tem_regras or tem_autolimpeza)
 
             if st.button("Aplicar Limpeza! →", type="primary", disabled=btn_disabled):
                 st.session_state.dicionario_editado = dicionario_editado
                 st.session_state.etapa = 3
                 st.rerun()
 
-        if len(linhas_validas) == 0:
-            st.warning("Adicione ao menos uma regra de tradução (Antigo → Novo) para continuar.")
+        # 3. Mensagens de feedback inteligentes
+        if not tem_regras and not tem_autolimpeza:
+            st.warning("Adicione uma regra ou ative uma Auto-Limpeza na Etapa 1 para continuar.")
+        elif not tem_regras and tem_autolimpeza:
+            st.info("💡 Nenhuma regra de dicionário definida. Apenas a Auto-Limpeza será aplicada.")
         else:
-            st.success(f"{len(linhas_validas)} regra(s) definida(s).")
+            st.success(f"✅ {len(linhas_validas)} regra(s) e filtros automáticos prontos.")
 
     # ETAPA 3 > Processar e Download
     elif st.session_state.etapa == 3:
