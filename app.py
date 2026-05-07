@@ -30,7 +30,7 @@ def _detectar_separador(amostra: str) -> str | None:
     """
     Tenta identificar o delimitador do CSV via csv.Sniffer.
 
-    Retorna o caractere separador (',', ';', '\\t' ou '|') ou None se o
+    Retorna o caractere separador (',', ';', '\t' ou '|') ou None se o
     sniffer não conseguir decidir — nesse caso o caller pode cair para
     o engine Python como rede de segurança.
     """
@@ -175,7 +175,7 @@ if fato_files and st.session_state.dataframes:
         # Prévia dos dados originais
         with st.expander(f"Visualizar dados originais — {primeiro_nome}"):
             mostrar_mais = st.checkbox(
-                "Habilitar mais linhas (150)",
+                "Expandir amostra para 150 linhas",
                 value=False,
                 key="expandir_etapa1"
             )
@@ -192,8 +192,30 @@ if fato_files and st.session_state.dataframes:
             help="Apenas colunas de texto serão processadas. Numéricas/data são ignoradas automaticamente."
         )
 
+        # --- NOVO BLOCO DE AUTO-LIMPEZA ---
+        st.markdown("##### Opções de Auto-Limpeza rápidas")
+        col_clean1, col_clean2 = st.columns(2)
+        
+        with col_clean1:
+            auto_title = st.checkbox(
+                "Maiúsculas/Minúsculas (Title Case)", 
+                help="Ex: 'maria silva' ou 'MARIA SILVA' viram 'Maria Silva'", 
+                value=True
+            )
+            st.caption("Padroniza o texto deixando a primeira letra de cada palavra em maiúscula (ex: 'maria silva' ➔ 'Maria Silva').")
+
+        with col_clean2:
+            auto_spaces = st.checkbox(
+                "Remover espaços extras no meio", 
+                help="Ex: 'Cloud    Corp' vira 'Cloud Corp'", 
+                value=True
+            )
+            st.caption("Remove espaços duplos acidentais no meio do texto (ex: 'Cloud   Corp' ➔ 'Cloud Corp').")
+
         if st.button("Ir para criação de regras →", type="primary", disabled=not colunas_selecionadas):
             st.session_state.colunas_selecionadas = colunas_selecionadas
+            st.session_state.auto_title = auto_title
+            st.session_state.auto_spaces = auto_spaces
             st.session_state.etapa = 2
             st.rerun()
 
@@ -305,15 +327,27 @@ if fato_files and st.session_state.dataframes:
                     colunas_ignoradas.append((col, str(df[col].dtype)))
                     continue
 
-                # Aplica a substituição apenas nas linhas com valor (preserva NaN reais).
-                # Sem essa máscara, o astype(str) converteria NaN em string "nan".
+                # --- NOVO BLOCO DE PROCESSAMENTO DE AUTO-LIMPEZA ---
+                # Isola apenas os dados válidos (ignorando NaN reais)
                 mask_nao_nulo = df[col].notna()
-                df.loc[mask_nao_nulo, col] = (
-                    df.loc[mask_nao_nulo, col]
-                      .astype(str)
-                      .str.strip()
-                      .replace(mapa_global)
-                )
+                
+                # Passo A: Converte para string e limpa pontas (padrão)
+                serie_texto = df.loc[mask_nao_nulo, col].astype(str).str.strip()
+
+                # Passo B: Auto-Limpeza de Espaços (Regex)
+                if st.session_state.get('auto_spaces', False):
+                    serie_texto = serie_texto.replace(r'\s+', ' ', regex=True)
+
+                # Passo C: Auto-Limpeza de Capitalização (Title Case)
+                if st.session_state.get('auto_title', False):
+                    serie_texto = serie_texto.str.title()
+
+                # Passo D: Aplica o Dicionário customizado do usuário
+                if mapa_global:
+                    serie_texto = serie_texto.replace(mapa_global)
+
+                # Devolve os dados limpos para a coluna original do DataFrame
+                df.loc[mask_nao_nulo, col] = serie_texto
 
             # Avisa, uma vez por arquivo, as colunas que foram puladas
             if colunas_ignoradas:
