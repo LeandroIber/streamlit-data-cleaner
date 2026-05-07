@@ -23,7 +23,3 @@ O fluxo de uso da aplicação é dividido em três etapas:
 - **Streamlit:** Framework utilizado para a construção da interface, navegação entre as etapas e gestão de estado (session_state).
 - **Pandas:** Motor principal para leitura estruturada, manipulação dos DataFrames e aplicação das regras de substituição de texto.
 - **Openpyxl:** Biblioteca para suporte a leitura e escrita de arquivos Excel (.xlsx).
-
-## Autor
-
-Desenvolvido por Leandro Iber.
