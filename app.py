@@ -101,7 +101,7 @@ def ler_arquivo(file, **kwargs) -> pd.DataFrame:
     )
 
 
-def corrigir_semelhancas_automaticamente(serie_texto, grau_corte=0.92):
+def corrigir_semelhancas_automaticamente(serie_texto, grau_corte=0.85):
     """
     Identifica palavras muito parecidas e padroniza usando o termo mais frequente.
     """
