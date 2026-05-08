@@ -114,11 +114,30 @@ if 'etapa' not in st.session_state:
 
 
 # --- TOPO SEMPRE VISÍVEL ---
-fato_files = st.file_uploader(
-    "Upload das tabelas (Pode selecionar várias)",
-    type=['csv', 'xlsx'],
-    accept_multiple_files=True
-)
+# Criamos duas colunas. A primeira é 3x maior que a segunda.
+col_upload, col_botao = st.columns([3, 1], vertical_alignment="bottom")
+
+with col_upload:
+    fato_files = st.file_uploader(
+        "Upload das tabelas (Pode selecionar várias)",
+        type=['csv', 'xlsx'],
+        accept_multiple_files=True
+    )
+
+with col_botao:
+    # Tentamos abrir o arquivo que você subiu no GitHub
+    try:
+        with open("Exemplo de tabela suja.csv", "rb") as file:
+            st.download_button(
+                label="Planilha Teste",
+                data=file,
+                file_name="Exemplo_de_tabela_suja.csv",
+                mime="text/csv",
+                use_container_width=True,
+                help="Baixe um exemplo para testar as funcionalidades agora mesmo."
+            )
+    except FileNotFoundError:
+        st.error("Arquivo de exemplo não encontrado.")
 
 
 # ============================================================
