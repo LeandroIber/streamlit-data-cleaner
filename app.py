@@ -114,8 +114,9 @@ if 'etapa' not in st.session_state:
 
 
 # --- TOPO SEMPRE VISÍVEL ---
-# Criamos duas colunas. A primeira é 3x maior que a segunda.
-col_upload, col_botao = st.columns([3, 1], vertical_alignment="bottom")
+# Mudamos a proporção para [5, 1].
+# Isso faz a coluna do botão ser bem mais estreita que a do upload.
+col_upload, col_botao = st.columns([5, 1], vertical_alignment="bottom")
 
 with col_upload:
     fato_files = st.file_uploader(
@@ -125,7 +126,6 @@ with col_upload:
     )
 
 with col_botao:
-    # Tentamos abrir o arquivo que você subiu no GitHub
     try:
         with open("Exemplo de tabela suja.csv", "rb") as file:
             st.download_button(
@@ -133,7 +133,8 @@ with col_botao:
                 data=file,
                 file_name="Exemplo_de_tabela_suja.csv",
                 mime="text/csv",
-                use_container_width=True,
+                # MUDANÇA AQUI: False faz o botão ficar no tamanho original do texto
+                use_container_width=False,
                 help="Baixe um exemplo para testar as funcionalidades agora mesmo."
             )
     except FileNotFoundError:
