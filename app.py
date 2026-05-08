@@ -154,7 +154,7 @@ with col_botao:
     try:
         with open("Exemplo de tabela suja.csv", "rb") as file:
             st.download_button(
-                label="📥 Planilha Teste",
+                label="Planilha Teste",
                 data=file,
                 file_name="Exemplo_de_tabela_suja.csv",
                 mime="text/csv",
@@ -193,11 +193,11 @@ if fato_files:
 
     # Mostra erros de leitura uma vez, visível em qualquer etapa
     for nome, erro in st.session_state.get('erros_carregamento', []):
-        st.error(f"❌ Não conseguimos ler `{nome}`. Esse arquivo será ignorado.")
+        st.error(f"Não conseguimos ler `{nome}`. Esse arquivo será ignorado.")
         st.caption(f"Detalhe técnico: {erro}")
 
     # Indicador visual de progresso
-    etapa_labels = {1: "① Escolher Colunas", 2: "② Criar Dicionário", 3: "③ Processar e Baixar"}
+    etapa_labels = {1: "1. Escolher Colunas", 2: "2. Criar Dicionário", 3: "3. Processar e Baixar"}
     st.info(f"**Etapa atual:** {etapa_labels.get(st.session_state.etapa, '')}")
     st.divider()
 
@@ -244,18 +244,18 @@ if fato_files and st.session_state.dataframes:
 
         with col_clean1:
             auto_title = st.checkbox("Maiúsculas/Minúsculas", value=True)
-            st.caption("Padroniza o texto (ex: 'maria' ➔ 'Maria').")
+            st.caption("Padroniza o texto (ex: 'maria' -> 'Maria').")
 
         with col_clean2:
             auto_spaces = st.checkbox("Remover espaços extras", value=True)
-            st.caption("Remove espaços duplos (ex: 'Cloud   Corp' ➔ 'Cloud Corp').")
+            st.caption("Remove espaços duplos (ex: 'Cloud   Corp' -> 'Cloud Corp').")
 
         # MUDANÇA 2: O novo botão
         with col_clean3:
             auto_fuzzy = st.checkbox("Agrupar nomes parecidos", value=False)
             st.caption("Junta erros de digitação (ex: 'Fastdelivery' e 'Fast Delivery').")
 
-        if st.button("Ir para criação de regras →", type="primary", disabled=not colunas_selecionadas):
+        if st.button("Ir para criação de regras", type="primary", disabled=not colunas_selecionadas):
             st.session_state.colunas_selecionadas = colunas_selecionadas
             st.session_state.auto_title = auto_title
             st.session_state.auto_spaces = auto_spaces
@@ -273,7 +273,7 @@ if fato_files and st.session_state.dataframes:
         st.markdown(
             "Preencha a tabela abaixo com os termos **Antigos** (como estão no CSV) "
             "e os termos **Novos** (como devem ficar). "
-            "Use o botão **＋** para adicionar mais linhas."
+            "Use o botão **+** para adicionar mais linhas."
         )
 
         # --- CORREÇÃO: Aplicar auto-limpeza na visualização da prévia ---
@@ -340,7 +340,7 @@ if fato_files and st.session_state.dataframes:
         col_voltar, col_avancar = st.columns([1, 3])
 
         with col_voltar:
-            if st.button("← Voltar"):
+            if st.button("Voltar"):
                 st.session_state.etapa = 1
                 st.rerun()
 
@@ -359,7 +359,7 @@ if fato_files and st.session_state.dataframes:
             # O botão fica desabilitado apenas se AMBOS forem falsos
             btn_disabled = not (tem_regras or tem_autolimpeza)
 
-            if st.button("Aplicar Limpeza! →", type="primary", disabled=btn_disabled):
+            if st.button("Aplicar Limpeza!", type="primary", disabled=btn_disabled):
                 st.session_state.dicionario_editado = dicionario_editado
                 st.session_state.etapa = 3
                 st.rerun()
@@ -368,9 +368,9 @@ if fato_files and st.session_state.dataframes:
         if not tem_regras and not tem_autolimpeza:
             st.warning("Adicione uma regra ou ative uma Auto-Limpeza na Etapa 1 para continuar.")
         elif not tem_regras and tem_autolimpeza:
-            st.info("💡 Nenhuma regra de dicionário definida. Apenas a Auto-Limpeza será aplicada.")
+            st.info("Nenhuma regra de dicionário definida. Apenas a Auto-Limpeza será aplicada.")
         else:
-            st.success(f"✅ {len(linhas_validas)} regra(s) e filtros automáticos prontos.")
+            st.success(f"{len(linhas_validas)} regra(s) e filtros automáticos prontos.")
 
     # ETAPA 3 > Processar e Download
     elif st.session_state.etapa == 3:
@@ -444,7 +444,7 @@ if fato_files and st.session_state.dataframes:
             if colunas_ignoradas:
                 detalhes = ', '.join(f"`{c}` ({t})" for c, t in colunas_ignoradas)
                 st.warning(
-                    f"⚠️ Em `{nome_arquivo}`, as colunas {detalhes} foram ignoradas "
+                    f"Em `{nome_arquivo}`, as colunas {detalhes} foram ignoradas "
                     "porque não são de texto (substituição via dicionário só se aplica a strings)."
                 )
 
