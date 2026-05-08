@@ -1,5 +1,6 @@
 import csv
 import io
+import difflib
 
 import pandas as pd
 import streamlit as st
@@ -100,6 +101,30 @@ def ler_arquivo(file, **kwargs) -> pd.DataFrame:
     )
 
 
+def corrigir_semelhancas_automaticamente(serie_texto, grau_corte=0.92):
+    """
+    Identifica palavras muito parecidas e padroniza usando o termo mais frequente.
+    """
+    # Conta a frequência de cada termo (os mais frequentes ficam no topo)
+    frequencias = serie_texto.value_counts()
+    termos_unicos = frequencias.index.dropna().tolist()
+
+    mapa_correcao = {}
+
+    # Compara cada termo com os outros para achar os "quase iguais"
+    for termo in termos_unicos:
+        if termo in mapa_correcao:
+            continue
+
+        parecidos = difflib.get_close_matches(termo, termos_unicos, n=15, cutoff=grau_corte)
+
+        for p in parecidos:
+            mapa_correcao[p] = termo
+
+    # Aplica a correção de uma vez só
+    return serie_texto.replace(mapa_correcao)
+
+
 # ============================================================
 # CONFIGURAÇÃO DA PÁGINA
 # ============================================================
@@ -129,7 +154,7 @@ with col_botao:
     try:
         with open("Exemplo de tabela suja.csv", "rb") as file:
             st.download_button(
-                label="Planilha Teste",
+                label="📥 Planilha Teste",
                 data=file,
                 file_name="Exemplo_de_tabela_suja.csv",
                 mime="text/csv",
@@ -214,28 +239,28 @@ if fato_files and st.session_state.dataframes:
 
         # --- NOVO BLOCO DE AUTO-LIMPEZA ---
         st.markdown("##### Opções de Auto-Limpeza rápidas")
-        col_clean1, col_clean2 = st.columns(2)
-        
+        # MUDANÇA 1: Agora são 3 colunas
+        col_clean1, col_clean2, col_clean3 = st.columns(3)
+
         with col_clean1:
-            auto_title = st.checkbox(
-                "Maiúsculas/Minúsculas (Title Case)", 
-                help="Ex: 'maria silva' ou 'MARIA SILVA' viram 'Maria Silva'", 
-                value=True
-            )
-            st.caption("Padroniza o texto deixando a primeira letra de cada palavra em maiúscula (ex: 'maria silva' ➔ 'Maria Silva').")
+            auto_title = st.checkbox("Maiúsculas/Minúsculas", value=True)
+            st.caption("Padroniza o texto (ex: 'maria' ➔ 'Maria').")
 
         with col_clean2:
-            auto_spaces = st.checkbox(
-                "Remover espaços extras no meio", 
-                help="Ex: 'Cloud    Corp' vira 'Cloud Corp'", 
-                value=True
-            )
-            st.caption("Remove espaços duplos acidentais no meio do texto (ex: 'Cloud   Corp' ➔ 'Cloud Corp').")
+            auto_spaces = st.checkbox("Remover espaços extras", value=True)
+            st.caption("Remove espaços duplos (ex: 'Cloud   Corp' ➔ 'Cloud Corp').")
+
+        # MUDANÇA 2: O novo botão
+        with col_clean3:
+            auto_fuzzy = st.checkbox("Agrupar nomes parecidos", value=False)
+            st.caption("Junta erros de digitação (ex: 'Fastdelivery' e 'Fast Delivery').")
 
         if st.button("Ir para criação de regras →", type="primary", disabled=not colunas_selecionadas):
             st.session_state.colunas_selecionadas = colunas_selecionadas
             st.session_state.auto_title = auto_title
             st.session_state.auto_spaces = auto_spaces
+            # MUDANÇA 3: Salvar a escolha na memória
+            st.session_state.auto_fuzzy = auto_fuzzy
             st.session_state.etapa = 2
             st.rerun()
 
@@ -281,7 +306,11 @@ if fato_files and st.session_state.dataframes:
                         # Capitalização
                         if st.session_state.get('auto_title', False):
                             serie = serie.str.title()
-                            
+
+                        # NOVO: Aplica o agrupamento inteligente na prévia
+                        if st.session_state.get('auto_fuzzy', False):
+                            serie = corrigir_semelhancas_automaticamente(serie)
+
                         df_preview.loc[mask, col] = serie
 
                 mostrar_mais = st.checkbox(
@@ -399,6 +428,10 @@ if fato_files and st.session_state.dataframes:
                 # Passo C: Auto-Limpeza de Capitalização (Title Case)
                 if st.session_state.get('auto_title', False):
                     serie_texto = serie_texto.str.title()
+
+                # NOVO: Passo C.2: Inteligência de Agrupamento (Fuzzy Matching)
+                if st.session_state.get('auto_fuzzy', False):
+                    serie_texto = corrigir_semelhancas_automaticamente(serie_texto)
 
                 # Passo D: Aplica o Dicionário customizado do usuário
                 if mapa_global:
