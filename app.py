@@ -131,7 +131,7 @@ def corrigir_semelhancas_automaticamente(serie_texto, grau_corte=0.85):
 
 st.set_page_config(page_title="Datacleaner Automático", layout="wide")
 st.title("Automação de Limpeza e Tradução")
-st.markdown("Suba seus arquivos CSV ou XLSX para aplicar a substituição.")
+st.markdown("Suba seus arquivos CSV ou XLSX para aplicar a Limpeza.")
 
 # Inicializa a "memória" da etapa
 if 'etapa' not in st.session_state:
