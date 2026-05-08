@@ -1,0 +1,96 @@
+id_ticket,nome_responsavel,setor_solicitante,cod_projeto,fornecedor,valor_gasto
+1001,João Pedro,Tecnologia,PRJ-Alpha,CloudCorp,1500.50
+1002, maria silva ,RH, prj alpha ,Cloud Corp,2000.00
+1003,Carlos T.,Vendas,PRJ-BETA,  FastDelivery  ,
+1004,, T.I. ,PRJ-BETA,Fast Delivery,3400.00
+1005,João P.,Tecnologia,,CloudCorp,1250.00
+1006,Maria Silva,Recursos Humanos,prj-alpha,CloudCorp Inc,4000.00
+1007,Ana Souza,MKT,PRJ-GAMA,MediaHouse,5000.00
+1008, Carlos T. ,,PRJ-BETA,FastDelivery,
+1009,João Pedro, TI ,PRJ-Alpha,Cloud Corp,1500.50
+1010,Pedro H.,Marketing,prj gama,Media House,4500.00
+1011,ana souza,Mktg,PRJ-GAMA, MediaHouse ,5200.00
+1012,,Vendas,,Fast Delivery,
+1013,Maria S., R.H. ,PRJ-ALPHA,CloudCorp,2100.00
+1014,João Pedro,Tecnologia,PRJ-Alpha, Cloud Corp ,1600.00
+1015,Carlos T.,Vendas,PRJ-BETA,FastDelivery,3100.00
+1016,Ana Souza,Marketing,PRJ-GAMA,,4800.00
+1017,Pedro Henrique,MKT,prj-gama,MediaHouse,
+1018,,Tecnologia,PRJ-Alpha,CloudCorp,1400.00
+1019,Maria Silva,Recursos Humanos,,CloudCorp Inc,4100.00
+1020,João P., T.I. ,PRJ-Alpha,CloudCorp,1550.00
+1021,Carlos T.,VENDAS,PRJ-BETA,Fast Delivery,
+1022,Ana Souza, mkt ,PRJ-GAMA,Media House,4950.00
+1023,,RH,prj alpha,Cloud Corp,2050.00
+1024,Pedro H.,Marketing,PRJ-GAMA, MediaHouse ,
+1025,João Pedro,TI,PRJ-Alpha,,1450.00
+1026,maria silva,R.H.,PRJ-ALPHA,CloudCorp,1900.00
+1027,Carlos T., Vendas ,PRJ-BETA,FastDelivery,3200.00
+1028,Ana S.,Mktg,prj-gama,MediaHouse,5100.00
+1029,Pedro Henrique,Marketing,,Media House,4600.00
+1030,,Tecnologia,PRJ-Alpha,CloudCorp,
+1031,João P., T.I.,PRJ-Alpha,Cloud Corp,1500.00
+1032,Maria Silva,Recursos Humanos,prj alpha, CloudCorp Inc ,4200.00
+1033,Carlos T.,Vendas,PRJ-BETA,Fast Delivery,3300.00
+1034,Ana Souza,MKT,,MediaHouse,
+1035,Pedro H., marketing ,PRJ-GAMA,Media House,4700.00
+1036,João Pedro,TI,prj-alpha,CloudCorp,1580.00
+1037,,RH,PRJ-ALPHA,Cloud Corp,1950.00
+1038,Carlos T., Vendas ,PRJ-BETA,,3150.00
+1039,maria s.,R.H.,PRJ-ALPHA,CloudCorp,2150.00
+1040,Ana Souza,Mktg,PRJ-GAMA,MediaHouse,
+1041,Pedro Henrique,MKT,prj gama, Media House ,4850.00
+1042,João P.,Tecnologia,PRJ-Alpha,CloudCorp,1480.00
+1043,, T.I. ,,Cloud Corp,1520.00
+1044,Maria Silva,Recursos Humanos,PRJ-ALPHA,CloudCorp Inc,4050.00
+1045,Carlos T.,VENDAS,prj-beta,FastDelivery,
+1046,Ana S.,Marketing,PRJ-GAMA,MediaHouse,5050.00
+1047,Pedro H., mkt ,PRJ-GAMA,Media House,4550.00
+1048,João Pedro,TI,PRJ-Alpha,,1620.00
+1049,maria silva,RH,prj alpha,Cloud Corp,
+1050,,Vendas,PRJ-BETA,Fast Delivery,3250.00
+1051,Carlos T.,Vendas,PRJ-BETA, FastDelivery ,3450.00
+1052,Ana Souza,Mktg,,MediaHouse,5150.00
+1053,Pedro Henrique,Marketing,PRJ-GAMA,Media House,
+1054,João P., Tecnologia ,prj-alpha,CloudCorp,1560.00
+1055,Maria S.,R.H.,PRJ-ALPHA,CloudCorp Inc,3950.00
+1056,, T.I. ,PRJ-Alpha,Cloud Corp,1490.00
+1057,Carlos T.,Vendas,prj beta,FastDelivery,3350.00
+1058,Ana Souza,MKT,PRJ-GAMA,,4900.00
+1059,Pedro H., marketing ,PRJ-GAMA, Media House ,4650.00
+1060,João Pedro,TI,PRJ-Alpha,CloudCorp,
+1061,maria silva,RH,,Cloud Corp,2080.00
+1062,Carlos T., Vendas ,PRJ-BETA,Fast Delivery,3180.00
+1063,,Mktg,prj-gama,MediaHouse,5250.00
+1064,Pedro Henrique,MKT,PRJ-GAMA,Media House,4750.00
+1065,João P.,Tecnologia,PRJ-Alpha,CloudCorp,1540.00
+1066,Maria Silva, Recursos Humanos ,PRJ-ALPHA,,4150.00
+1067,Carlos T.,VENDAS,prj-beta,FastDelivery,
+1068,Ana S.,Marketing,PRJ-GAMA,MediaHouse,5300.00
+1069,, mkt ,PRJ-GAMA,Media House,4800.00
+1070,João Pedro, T.I. ,prj alpha,Cloud Corp,1510.00
+1071,maria s.,R.H.,PRJ-ALPHA,CloudCorp,1980.00
+1072,Carlos T.,Vendas,, Fast Delivery ,3220.00
+1073,Ana Souza,MKT,PRJ-GAMA,MediaHouse,5080.00
+1074,Pedro H.,Marketing,prj-gama,Media House,
+1075,,TI,PRJ-Alpha,CloudCorp,1570.00
+1076,Maria Silva,RH,PRJ-ALPHA,Cloud Corp,2020.00
+1077,Carlos T., Vendas ,PRJ-BETA,FastDelivery,3280.00
+1078,Ana Souza, Mktg ,PRJ-GAMA,,5180.00
+1079,Pedro Henrique,Marketing,prj gama, Media House ,4920.00
+1080,João P.,Tecnologia,,CloudCorp,
+1081,maria silva, T.I. ,PRJ-Alpha,Cloud Corp,1590.00
+1082,,Recursos Humanos,PRJ-ALPHA,CloudCorp Inc,4080.00
+1083,Carlos T.,VENDAS,prj-beta,Fast Delivery,3380.00
+1084,Ana S.,MKT,PRJ-GAMA,MediaHouse,
+1085,Pedro H., marketing ,PRJ-GAMA,Media House,4820.00
+1086,João Pedro,TI,PRJ-Alpha,CloudCorp,1470.00
+1087,Maria S.,RH,,Cloud Corp,1920.00
+1088,Carlos T.,Vendas,PRJ-BETA,FastDelivery,
+1089,, mkt ,prj-gama,MediaHouse,5220.00
+1090,Pedro Henrique,MKT,PRJ-GAMA, Media House ,4720.00
+1091,João P., Tecnologia ,prj alpha,CloudCorp,1530.00
+1092,maria silva,R.H.,PRJ-ALPHA,,2120.00
+1093,Carlos T., Vendas ,PRJ-BETA,Fast Delivery,3420.00
+1094,Ana Souza,Marketing,PRJ-GAMA,MediaHouse,5020.00
+1095,,Mktg,prj gama,Media House,
