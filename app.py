@@ -9,9 +9,6 @@ import streamlit as st
 # ============================================================
 # CONFIGURAÇÃO
 # ============================================================
-# Colunas que aparecem pré-selecionadas na Etapa 1 se existirem no arquivo.
-# Apenas conveniência — adapte para o seu domínio (ex.: ['utm_source', 'campaign'])
-# ou deixe a lista vazia ([]) para desativar a pré-seleção.
 COLUNAS_PRE_SELECIONADAS: list[str] = [
     'dim_analista',
     'dim_orgao',
@@ -28,13 +25,9 @@ _AMOSTRA_BYTES = 8192
 # ============================================================
 
 def _detectar_separador(amostra: str) -> str | None:
-    """
-    Tenta identificar o delimitador do CSV via csv.Sniffer.
-
-    Retorna o caractere separador (',', ';', '\t' ou '|') ou None se o
-    sniffer não conseguir decidir — nesse caso o caller pode cair para
-    o engine Python como rede de segurança.
-    """
+    
+    #Tenta identificar o delimitador do CSV via csv.Sniffer.
+    
     try:
         dialect = csv.Sniffer().sniff(amostra, delimiters=',;\t|')
         return dialect.delimiter
@@ -45,15 +38,7 @@ def _detectar_separador(amostra: str) -> str | None:
 def ler_arquivo(file, **kwargs) -> pd.DataFrame:
     """
     Lê CSV ou XLSX a partir do nome do arquivo.
-
-    Para CSVs:
-      - Tenta UTF-8 primeiro (incluindo BOM via utf-8-sig) e cai para latin-1.
-      - "Espia" os primeiros KB do arquivo para descobrir o separador, e usa
-        o engine C (rápido) quando bem-sucedido. Se o sniffer falhar, cai
-        para o engine Python que detecta o separador automaticamente.
-
-    Raises:
-        ValueError: se o arquivo não puder ser lido com nenhuma das estratégias.
+     ValueError: se o arquivo não puder ser lido com nenhuma das estratégias.
     """
     nome = file.name.lower()
 
@@ -133,14 +118,12 @@ st.set_page_config(page_title="Datacleaner Automático", layout="wide")
 st.title("Automação de Limpeza e Tradução")
 st.markdown("Suba seus arquivos CSV ou XLSX para aplicar a Limpeza.")
 
-# Inicializa a "memória" da etapa
+# Inicializa a etapa
 if 'etapa' not in st.session_state:
     st.session_state.etapa = 1
 
 
 # --- TOPO SEMPRE VISÍVEL ---
-# Mudamos a proporção para [5, 1].
-# Isso faz a coluna do botão ser bem mais estreita que a do upload.
 col_upload, col_botao = st.columns([5, 1], vertical_alignment="bottom")
 
 with col_upload:
